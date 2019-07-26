@@ -88,10 +88,11 @@ def five_day_rain_finder(listofzips):
         print('No city selected.')
         return
     else:
+        api_key = get_api_key()
+
         for city in listofzips:
 
             country_code = 'us'
-            api_key = get_api_key()
 
             # to fetch from weather api directly
 
