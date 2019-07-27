@@ -1,8 +1,9 @@
 import argparse
 # import json
-from datetime import date
 
 import requests
+
+import weath_json_parse
 
 
 def city_flag_check(arg_output):
@@ -78,9 +79,28 @@ def get_args():
 
 
 def get_api_key():
+    """to retrieve API key from text file"""
     with open('weather_api_key.txt', 'r') as file_obj:
         api_key = file_obj.read()
         return(str(api_key))
+
+
+def rain_day_printer(rainday_lst):
+    """to print out rainy days per city"""
+    for d_ate in rainday_lst:
+        print(d_ate)
+
+
+def get_rain_days(nested_dict):
+    rain_days = []
+    for res in nested_dict:
+        if 'rain' in res['weather']['weather_main'].lower():
+            rain_date = str(res['dt'])
+            city = res['city']
+            sentence = f'Rain in {city} {rain_date}'
+            if sentence not in rain_days:
+                rain_days.append(sentence)
+    return(rain_days)
 
 
 def five_day_rain_finder(listofzips):
@@ -111,31 +131,6 @@ def five_day_rain_finder(listofzips):
                 data_json = json.load(f)
             '''
 
-            # json parse functions
-
-            def get_date(entry):
-                # extract date
-                dt = entry['dt']
-                dt = date.fromtimestamp(dt)
-                return str(dt)
-
-            def get_temp_print(entry):
-
-                # extract temp
-                temp_k = entry['main']['temp']
-                temp_f = temp_k * (9/5) - 459.67
-                temp_f = round(temp_f, 1)
-                temp_f_wUnit = f'{temp_f} F'
-                return temp_f_wUnit
-
-            def get_weather_main(entry):
-                # get weather main
-                return entry['weather'][0]['main']
-
-            def get_weather_desc(entry):
-                # get weather description
-                return entry['weather'][0]['description']
-
             # main function
 
             city = data_json['city']['name']
@@ -143,10 +138,10 @@ def five_day_rain_finder(listofzips):
             results = []
             for i, day in enumerate(data_json['list']):
 
-                dt = get_date(day)
-                temp_f_wUnit = get_temp_print(day)
-                weather_main = get_weather_main(day)
-                weather_desc = get_weather_desc(day)
+                dt = weath_json_parse.get_date(day)
+                temp_f_wUnit = weath_json_parse.get_temp_print(day)
+                weather_main = weath_json_parse.get_weather_main(day)
+                weather_desc = weath_json_parse.get_weather_desc(day)
 
                 results.append({
                     'city': city,
@@ -158,18 +153,8 @@ def five_day_rain_finder(listofzips):
                     'dt': dt
                 })
 
-            rain_days = []
-
-            for res in results:
-                if 'rain' in res['weather']['weather_main'].lower():
-                    rain_date = str(res['dt'])
-                    city = res['city']
-                    sentence = f'Rain in {city} {rain_date}'
-                    if sentence not in rain_days:
-                        rain_days.append(sentence)
-
-            for d_ate in rain_days:
-                print(d_ate)
+            rain_days = get_rain_days(results)
+            rain_day_printer(rain_days)
 
 
 if __name__ == "__main__":
